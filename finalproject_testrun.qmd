@@ -1,0 +1,74 @@
+---
+title: "final project test run"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+#setup and api grab
+```{r}
+library(tidyverse)
+library(httr)
+library(jsonlite)
+
+url <- "https://gbfs.lyft.com/gbfs/2.3/dca-cabi/en/station_status.json"
+  
+  
+bike_json <- GET(url = url)
+http_status(bike_json)
+
+# get the contents of the response as a text string
+bike_json <- content(bike_json, as = "text")
+
+```
+
+#creating the dataset
+```{r}
+# create a character matrix from the JSON
+pop_matrix <- fromJSON(bike_json)
+
+# turn the body of the character matrix into a tibble
+pop_data <- as_tibble((pop_matrix[["data"]][["stations"]]),
+                      .name_repair = "minimal")
+#keeping only the data we want
+pop_data <- pop_data |>
+  select(station_id, num_bikes_available, num_docks_available)
+```
+
+#renaming the stations
+```{r}
+
+station_url <- "https://gbfs.lyft.com/gbfs/2.3/dca-cabi/en/station_information.json"
+station_json <- GET(url = station_url)
+http_status(station_json)
+
+# get the contents of the response as a text string
+station_json <- content(station_json, as = "text")
+station_matrix <- fromJSON(station_json)
+station_data <- as_tibble(station_matrix[["data"]][["stations"]],
+                      .name_repair = "minimal")
+station_data <- select(station_data, station_id, name)
+
+pop_data <- merge(pop_data, station_data, by = "station_id")
+pop_data <- pop_data |>
+  select (name, num_bikes_available, num_docks_available)
+```
+
+#reorienting the data
+```{r}
+
+bikes_wide <- pop_data |>
+  pivot_wider(
+    names_from = name,
+    values_from = c(num_bikes_available, num_docks_available),
+    names_glue = "{name}_{.value}"
+  ) 
+
+bikes_wide <- bikes_wide[, order(names(bikes_wide))]
+bikes_wide$date <- Sys.time()
+bikes_wide <- bikes_wide |>
+  relocate(date)
+
+bikes_wide
+```
