@@ -7,6 +7,7 @@ editor_options:
 ---
 
 #setup and api grab
+
 ```{r}
 library(tidyverse)
 library(httr)
@@ -24,6 +25,7 @@ bike_json <- content(bike_json, as = "text")
 ```
 
 #creating the dataset
+
 ```{r}
 # create a character matrix from the JSON
 pop_matrix <- fromJSON(bike_json)
@@ -37,6 +39,7 @@ pop_data <- pop_data |>
 ```
 
 #renaming the stations
+
 ```{r}
 
 station_url <- "https://gbfs.lyft.com/gbfs/2.3/dca-cabi/en/station_information.json"
@@ -56,6 +59,7 @@ pop_data <- pop_data |>
 ```
 
 #reorienting the data
+
 ```{r}
 
 bikes_wide <- pop_data |>
