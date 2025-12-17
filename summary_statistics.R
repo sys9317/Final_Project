@@ -2,7 +2,7 @@ library(tidyverse)
 library(lubridate)
 
 # bring CSV file and mutate date
-bike_data <- read_csv("daily_bike_usage_22_25_weather.csv") |>
+bike_data <- read_csv("net_daily_bike_usage_22_25_weather.csv") |>
   mutate(date = as.Date(date))
 
 #  Convert station columns to numeric 
@@ -36,10 +36,6 @@ station_summary <- bike_long |>
 top_10_stations <- head(station_summary, 10)
 print(top_10_stations)
 
-# 6. Compute total rides per day by summing across all station columns
-bike_data <- bike_data |>
-  mutate(total_rides = rowSums(across(all_of(station_cols)), na.rm = TRUE))
-
 # Daily total ride and daily activity summary
 daily_totals <- bike_long |>
   group_by(date) |>
@@ -55,6 +51,17 @@ daily_summary <- daily_totals |>
   )
 
 print(daily_summary)
+
+station_daily_summary <- bike_long |>
+  group_by(station) |>
+  summarise(
+    mean_rides   = mean(rides, na.rm = TRUE),
+    median_rides = median(rides, na.rm = TRUE),
+    sd_rides     = sd(rides, na.rm = TRUE),
+    min_rides    = min(rides, na.rm = TRUE),
+    max_rides    = max(rides, na.rm = TRUE)
+  )
+
 
 # 7. Monthly trends: aggregate daily totals by year‑month
 monthly_summary <- daily_totals |>
