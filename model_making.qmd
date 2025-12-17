@@ -1,0 +1,263 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+```{r}
+library(tidyverse)
+library(lubridate)
+library(recipes)
+library(themis)
+library(vip)
+library(rpart)
+library(recipes)
+library(parsnip)
+library(glmnet)
+library(ranger)
+library(kknn)
+library(rsample)
+library(tidy)
+```
+
+```{r}
+data <- read.csv("final_net_daily_bike_usage_22_25_weather.csv")
+```
+
+#need to add lagged information
+```{r}
+data$ridership <- data$New.Hampshire.Ave...T.St.NW
+
+
+present_data <- data.frame(date = data$date, ridership = data$ridership)
+
+data2 <- data |>
+  mutate(
+    ridership = lag(New.Hampshire.Ave...T.St.NW, n = 21))
+
+
+
+
+old_data <- read.csv("net_daily_bike_usage_22_25_weather.csv")
+
+old_data <- old_data |> 
+  select(date:Howard.Rd...Suitland.Pkwy.SE)
+
+old_data$ridership <- old_data$New.Hampshire.Ave...T.St.NW
+
+old_data <- old_data |>
+  select(date, ridership, New.Hampshire.Ave...T.St.NW, everything())
+
+old_data_lead <- old_data |>
+  mutate(
+    ridership = lead(ridership, n = 21),
+    date = lead(date, n = 21))
+
+write.csv(old_data_lead, "lead_data.csv", row.names = FALSE)
+
+
+```
+
+```{r}
+weather01 <- read.csv("data/weather01.csv")
+weather02 <- read.csv("data/weather02.csv")
+weather <- bind_rows(weather01, weather02)
+
+ names(weather)[2] <- "date"
+
+with_weather <- merge(old_data_lead, weather, by = "date")
+#write.csv(with_weather, "net_daily_bike_usage_22_25_weather.csv", row.names = FALSE)
+
+write.csv(with_weather, "lead_data_weather.csv", row.names = FALSE)
+
+```
+
+
+
+```{r}
+data <- read.csv("lead_data_weather.csv")
+
+data$date <- as.Date(as.character(data$date))
+
+data <- data |>
+  select(date:Howard.Rd...Suitland.Pkwy.SE, tempmax:precip, precipcover, snow:windspeed)
+
+
+data_rec <- recipe(~., data = data) |>
+  step_holiday(date,
+  holidays = c("LaborDay", "NewYearsDay", "ChristmasDay", "Easter", "GoodFriday", "USIndependenceDay", "USMemorialDay", "USThanksgivingDay", "USVeteransDay", "USMLKingsBirthday"),
+  keep_original_cols = TRUE)
+
+
+data_rec_prep <- prep(data_rec)
+data <- bake(data_rec_prep, new_data = NULL)
+## make new variable for is this a holiday
+#step_holiday(holidays = timeDate::listHolidays("US"))
+```
+
+### Weather Dummies
+
+```{r}
+data <- data |> mutate(
+  precip_dum = if_else(precip>0,1,0),
+  snow_dum = if_else(snow>0,1,0)
+)
+
+data <- data |>
+  mutate (
+    holiday = rowSums(across(c(date_LaborDay: date_USMLKingsBirthday)))
+  ) |>
+  select(date:windspeed, precip_dum:holiday)
+
+```
+
+```{r}
+data_limited <- data |>
+  select(date,New.Hampshire.Ave...T.St.NW, precip_dum, snow_dum) |>
+  filter(date == "2023-12-19" | date == "2024-12-19")
+
+View(data_limited)
+```
+
+```{r}
+write.csv(data, "final_lead_data_weather.csv", row.names = FALSE)
+```
+
+
+#model making
+```{r}
+data <- read.csv("final_lead_data_weather.csv")
+
+data$weekday <- wday(data$date, label = TRUE)
+data$month <- month(data$date, label = TRUE)
+data$yearday <- yday(data$date)
+
+bike_modeling <- data |>
+  slice(1:1379)
+
+bike_implementation <- data |>
+  slice(1380:1409) |>
+  select(-ridership)
+
+set.seed(20211101)
+
+data_split <- initial_split(bike_modeling)
+data_train <- training(data_split)
+data_test <- testing(data_split)
+
+data_folds <- vfold_cv(data = data_train, v = 10, repeats = 5)
+```
+
+```{r}
+#Recipe
+bike_rec <- data_train |>
+  recipe(ridership ~ .) |>
+   step_zv(all_predictors()) |>
+   step_nzv(all_predictors()) 
+
+ 
+
+```
+
+```{r}
+
+#Linear Model
+#Can we hyperparamterize this?
+
+lm <- linear_reg() |>
+  set_mode(mode = "regression") |>
+  set_engine(engine = "lm")
+
+lm_wf <- workflow() |>
+  add_model(lm) |>
+  add_recipe(bike_rec)
+
+lm_res <- lm_wf |>
+  fit_resamples(resamples = data_folds, rankdeficients = "NA")
+
+lm_metrics <- lm_res |>
+  collect_metrics(summarize = FALSE) |>
+  filter(.metric == "rmse")
+```
+
+```{r}
+#KNN
+knn <-
+  nearest_neighbor(neighbors = tune()) |>
+  set_engine(engine = "kknn") |>
+  set_mode(mode = "regression")
+
+knn_grid <- grid_regular(neighbors(range = c(1, 99)), levels = 10)
+
+knn_wf <- workflow() |>
+  add_recipe(bike_rec) |>
+  add_model(knn)
+
+knn_res <- knn_wf |>
+  tune_grid(
+    resamples = data_folds,
+    grid = knn_grid,
+    metrics = metric_set(rmse)
+  )
+
+knn_wf_final <- knn_wf |> 
+  finalize_workflow(select_best(knn_res))
+
+knn_res_final <- knn_wf_final |>
+  tune_grid(
+    resamples = data_folds,
+    grid = knn_grid,
+    metrics = metric_set(rmse)
+  )
+
+knn_metrics_final <- knn_res_final |>
+  collect_metrics(summarize = FALSE) |>
+  filter(.metric == "rmse")
+
+```
+
+```{r}
+rf <- rand_forest(
+  mtry = tune(),
+  min_n = tune(),
+  trees = 300
+) |>
+  set_mode("regression") |>
+  set_engine("ranger",
+             importance = "impurity")
+
+rf_wf <- workflow() |>
+  add_model(rf) |>
+  add_recipe(bike_rec)
+
+rf_grid <- grid_regular(
+  mtry(range = c(1, 5)),
+  min_n(range = c(1, 5)),
+  levels = 3
+)
+
+rf_resample <- tune_grid(
+  rf_wf, 
+  resamples = data_folds,
+  grid = rf_grid,
+  metrics = metric_set(rmse)
+)
+
+```
+
+```{r}
+#Ridge
+
+ ridge_mod <- linear_reg(penalty = 1, mixture = 0) |>
+    set_mode(mode = "regression") |>
+    set_engine(engine = "glmnet")  
+  
+  ridge_wf <- workflow() |>
+    add_recipe(recipe = bike_rec) |>
+    add_model(spec = ridge_mod)
+
+  ridge_resamples <- fit_resamples(ridge_wf, resamples = cv_folds)
+  
+  ridge_rmse <- collect_metrics(ridge_resamples) |>
+  filter(.metric == "rmse")
+
+```
