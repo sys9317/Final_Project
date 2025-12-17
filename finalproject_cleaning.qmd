@@ -9,7 +9,7 @@ editor: visual
 ### Setup
 
 ```{r}
-data <- read.csv("daily_bike_usage_22_25_weather.csv")
+data <- read.csv("net_daily_bike_usage_22_25_weather.csv")
 library(dplyr)
 library(lubridate)
 library(recipes)
@@ -28,6 +28,8 @@ data_rec <- recipe(~., data = data) |>
 
 data_rec_prep <- prep(data_rec)
 data <- bake(data_rec_prep, new_data = NULL)
+## make new variable for is this a holiday
+#step_holiday(holidays = timeDate::listHolidays("US"))
 ```
 
 ### Weather Dummies
@@ -37,5 +39,17 @@ data <- data |> mutate(
   precip_dum = if_else(precip>0,1,0),
   snow_dum = if_else(snow>0,1,0)
 )
+```
+
+```{r}
+data_limited <- data |>
+  select(date,New.Hampshire.Ave...T.St.NW, precip_dum, snow_dum) |>
+  filter(date == "2023-12-19" | date == "2024-12-19")
+
+View(data_limited)
+```
+
+```{r}
+write.csv(data, "final_net_daily_bike_usage_22_25_weather.csv", row.names = FALSE)
 ```
 
