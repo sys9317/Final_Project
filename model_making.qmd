@@ -3,6 +3,7 @@ output: html_document
 editor_options: 
   chunk_output_type: console
 ---
+#Libraries
 ```{r}
 library(tidyverse)
 library(lubridate)
@@ -19,7 +20,7 @@ library(rsample)
 library(tidymodels)
 ```
 
-#model making
+#Data Split and Folds
 ```{r}
 data <- read.csv("final_lead_data_weather.csv")
 
@@ -43,6 +44,7 @@ data_test <- testing(data_split)
 data_folds <- vfold_cv(data = data_train, v = 10, repeats = 5)
 ```
 
+#Recipe
 ```{r}
 #Recipe
 bike_rec <- recipe(ridership ~ ., data = data_train) |>
@@ -55,8 +57,8 @@ bike_rec <- recipe(ridership ~ ., data = data_train) |>
 
 ```
 
+#Linear Model
 ```{r}
-
 #Linear Model
 #Can we hyperparamterize this?
 
@@ -76,11 +78,10 @@ lm_metrics <- lm_res |>
   filter(.metric == "rmse")
 ```
 
-
+#KNN Model
 ```{r}
 #KNN
-knn <-
-  nearest_neighbor(neighbors = tune()) |>
+knn <-  nearest_neighbor(neighbors = tune()) |>
   set_engine(engine = "kknn") |>
   set_mode(mode = "regression")
 
@@ -100,12 +101,15 @@ knn_res <- knn_wf |>
 knn_wf_final <- knn_wf |> 
   finalize_workflow(select_best(knn_res))
 
+#Think this isn't right
+#knn_res_final <- knn_wf_final |>
+#  tune_grid(
+#    resamples = data_folds,
+#    grid = knn_grid,
+#    metrics = metric_set(rmse) )
+
 knn_res_final <- knn_wf_final |>
-  tune_grid(
-    resamples = data_folds,
-    grid = knn_grid,
-    metrics = metric_set(rmse)
-  )
+  last_fit(data_split) 
 
 knn_metrics_final <- knn_res_final |>
   collect_metrics(summarize = FALSE) |>
@@ -113,6 +117,7 @@ knn_metrics_final <- knn_res_final |>
 
 ```
 
+#RF Model
 ```{r}
 rf <- rand_forest(
   mtry = tune(),
@@ -128,8 +133,8 @@ rf_wf <- workflow() |>
   add_recipe(bike_rec)
 
 rf_grid <- grid_regular(
-  mtry(range = c(1, 5)),
-  min_n(range = c(1, 5)),
+  mtry(range = c(1, 10)),
+  min_n(range = c(1, 20)),
   levels = 3
 )
 
@@ -140,12 +145,31 @@ rf_resample <- tune_grid(
   metrics = metric_set(rmse)
 )
 
-rm_metrics <- rf_resample |>
+#rm_metrics <- rf_resample |>
+ # collect_metrics(summarize = FALSE) |>
+  #filter(.metric == "rmse")
+
+best_rf <- select_best(
+  rf_resample,
+  metric = "rmse"
+)
+
+rf_wf_final <- rf_wf |>
+  finalize_workflow(best_rf)
+
+rf_res_final <- rf_wf_final |>
+  last_fit(data_split)
+
+rf_metrics_final <- rf_res_final |>
   collect_metrics(summarize = FALSE) |>
   filter(.metric == "rmse")
 
 ```
+#Regression Trees
 
+
+
+#Ridge Model
 ```{r}
 #Ridge
 
@@ -164,6 +188,7 @@ rm_metrics <- rf_resample |>
 
 ```
 
+#RMSEs
 ```{r}
 # Calculate RMSE
 lm_mean_rmse  <- mean(lm_metrics$.estimate)
