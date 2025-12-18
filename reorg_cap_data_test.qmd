@@ -51,7 +51,6 @@ data34 <- read.csv("data/202410-capitalbikeshare-tripdata.csv")
 data35 <- read.csv("data/202411-capitalbikeshare-tripdata.csv")
 data36 <- read.csv("data/202412-capitalbikeshare-tripdata.csv")
 
-
 data37 <- read.csv("data/202501-capitalbikeshare-tripdata.csv")
 data38 <- read.csv("data/202502-capitalbikeshare-tripdata.csv")
 data39 <- read.csv("data/202503-capitalbikeshare-tripdata.csv")
@@ -65,12 +64,9 @@ data46 <- read.csv("data/202510-capitalbikeshare-tripdata.csv")
 data47 <- read.csv("data/202511-capitalbikeshare-tripdata.csv")
 ```
 
-#reorganizing by day
+#cleaning data
 ```{r}
-#this creates a dataset with every observation being a day-station, showing how many trips started from the given station
-
-#reorg <- function(data){
-
+#removing all unnecessary variable columns and NA values for start_station and end_station. These observations are E-Bikes that did not use a station, thus not relevant to our study.
 
 delete_na <- function(data){
 data <- data |>
@@ -134,15 +130,13 @@ data44 <- delete_na(data44)
 data45 <- delete_na(data45)
 data46 <- delete_na(data46)
 data47 <- delete_na(data47)
-
 ```
 
-#last stop function
+#pivoting data
 ```{r}
 laststop <- function(data){
 
-#Split the data into two files, one for starts, and one for ends
-    
+#Split the data into two files, one for just trip starts, and one for trip ends
  starts <-  data |>
   group_by(started_at) |>
   count(start_station_name)
@@ -155,9 +149,7 @@ laststop <- function(data){
   names(ends)[2] <- "station"
   names(ends)[3] <- "end_count"
   
-#Pivot both datasets so each observation is a day of the month
-#and each variable is a station, calculating how many trips started/end
-#at that station
+#Pivot both data sets so each observation is a day of the month and each variable is a station, calculating how many trips started/end at that station
   start_wide <- starts |>
   pivot_wider(
     names_from = station,
@@ -176,8 +168,8 @@ end_wide[is.na(end_wide)] <- 0
 #started and ended at every station
 merged_counts <- merge(start_wide, end_wide, by = c("started_at"))
 
+#Calculate net activity at every station, subtracting start data (bikes leaving a station) from end data (bikes arriving)
 base_names <- unique(sub("\\.[xy]$", "", names(merged_counts)))
-
 for (nm in base_names) {
   x_col <- paste0(nm, ".x")
   y_col <- paste0(nm, ".y")
@@ -186,9 +178,11 @@ for (nm in base_names) {
   }
 }
 
+#removing the original start and end data, notated by the .x or .y ending their column names
 merged_counts <- merged_counts[, !grepl("\\.[xy]$", names(merged_counts))]
-names(merged_counts)[1] <- "date"
 
+#changing date variable to be titled as such
+names(merged_counts)[1] <- "date"
 
 return(merged_counts)
 }
@@ -248,8 +242,8 @@ data46 <- laststop(data46)
 data47 <- laststop(data47)
 ```
 
+#Merging data into one master dataset
 ```{r}
-
 combined <- bind_rows(data01, data02)
 combined <- bind_rows(combined, data03)
 combined <- bind_rows(combined, data04)
@@ -301,12 +295,12 @@ combined <- bind_rows(combined, data47)
 
 combined[is.na(combined)] <- 0
 
-
+#some of the datasets repeat days, this code removes that and tallies their totals
 combined_data <- combined %>%
   group_by(date) %>%
   summarise(across(where(is.numeric), sum),
             across(where(~!is.numeric(.)), first))
-
+#saving file
 write.csv(combined_data, "net_daily_bike_usage_22_25.csv", row.names = FALSE)
 ```
 
@@ -317,6 +311,7 @@ data <- data |>
   group_by(date) |>
   summarise_if(is.numeric, sum, na.rm = TRUE)
 
+#reading in weather data (in two sets due to complications with source)
 weather01 <- read.csv("data/weather01.csv")
 weather02 <- read.csv("data/weather02.csv")
 weather <- bind_rows(weather01, weather02)
@@ -324,103 +319,7 @@ weather <- bind_rows(weather01, weather02)
  names(weather)[2] <- "date"
 
 with_weather <- merge(data, weather, by = "date")
+#saving dataset with weather included
 write.csv(with_weather, "net_daily_bike_usage_22_25_weather.csv", row.names = FALSE)
 ```
-
-
-
-
-#junk code
-
-```{r}
-
-old_laststop <- function(data){
-
-#Split the data into two files, one for starts, and one for ends
-  data <- data03
- starts <-  data |>
-  group_by(started_at) |>
-  count(start_station_name)
- names(starts)[2] <- "station"
- names(starts)[3] <- "start_count"
-
- ends <-  data |>
-  group_by(started_at) |>
-  count(end_station_name)
-  names(ends)[2] <- "station"
-  names(ends)[3] <- "end_count"
-  
-#Pivot both datasets so each observation is a day of the month
-#and each variable is a station, calculating how many trips started/end
-#at that station
-  start_wide <- starts |>
-  pivot_wider(
-    names_from = station,
-    values_from = start_count
-  )
-start_wide[is.na(start_wide)] <- 0
-
-  end_wide <- ends |>
-  pivot_wider(
-    names_from = station,
-    values_from = end_count
-  )
-end_wide[is.na(end_wide)] <- 0
-
-#Merge the two files back together, showing on each day how many trips
-#started and ended at every station
-merged_counts <- merge(start_wide, end_wide, by = c("started_at"))
-
-#Pivot the data again, where each observation is a station per day, there's a new column for type of trip (either an arrival or a departure), and the subsequent count
-long <- merged_counts |>
-  pivot_longer(
-    cols = -started_at,
-     names_to = c("station", "type"),
-    names_pattern = "(.*)\\.(x|y)",
-    values_to = "count"
-  ) |>
-  mutate(
-    type = recode(type,
-                  x = "departures",
-                  y = "arrivals")
-  )
-
-#create new variables, total and net, calculating the aggregate and net trips taken per station per day
-summary <- long |>
-  group_by(started_at, station) |>
-  summarise(
-    net   = sum(if_else(type == "arrivals", count, -count)),
-    .groups = "drop"
-  )
-
-#Pivot back to wide format, each observation is a day, and each variable is a stations net or aggregate trip count
-summary_wide <- summary |>
-  pivot_wider(
-    names_from = station,
-    values_from = c(net),
-    names_glue = "{station}_{.value}"
-  )
-
-return(summary_wide)
-}
-
-
-```
-
-```{r}
-#Merge these newly created variables for net and sum to the original data set
-#data set now contains variables for station arrivals, station departures, aggregate station activity, and net station activity
-final <- merged_counts |>
-  left_join(summary_wide, by = "started_at")
-
-
-#variables are organized by: all departures, followed by all arrivals, followed by all aggregates, and then all nets. Alphabetizing this much data takes way too long. I advise we merge all the data, and then only keep the types of information we want to work with.
-return(final)
-
-```
-
-
-Chicago_implementation$weekday <- wday(Chicago_implementation$date, label = TRUE)
-Chicago_implementation$month <- month(Chicago_implementation$date, label = TRUE)
-Chicago_implementation$yearday <- yday(Chicago_implementation$date)
 
