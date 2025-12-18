@@ -53,7 +53,8 @@ bike_rec <- recipe(ridership ~ ., data = data_train) |>
   step_dummy(all_nominal_predictors()) |>
   step_nzv(all_predictors()) |>
   step_lincomb(all_numeric_predictors()) |>
-  step_corr(all_numeric_predictors(), threshold = 0.9)
+  step_corr(all_numeric_predictors(), threshold = 0.9) |>
+  step_normalize(all_predictors())
 
 ```
 
@@ -164,16 +165,15 @@ rf_metrics_final <- rf_res_final |>
   collect_metrics(summarize = FALSE) |>
   filter(.metric == "rmse")
 
+rf_mean_rmse  <- mean(rf_metrics_final$.estimate)
+
 ```
-#Regression Trees
-
-
 
 #Ridge Model
 ```{r}
 #Ridge
 
- ridge_mod <- linear_reg(penalty = 1, mixture = 0) |>
+ ridge_mod <- linear_reg(penalty = 30, mixture = 0) |>
     set_mode(mode = "regression") |>
     set_engine(engine = "glmnet")  
   
@@ -183,22 +183,71 @@ rf_metrics_final <- rf_res_final |>
 
   ridge_resamples <- fit_resamples(ridge_wf, resamples = data_folds)
   
+  
   ridge_rmse <- collect_metrics(ridge_resamples) |>
   filter(.metric == "rmse")
 
+  ridge_mean_rmse <- mean(ridge_rmse$mean)
+
 ```
+#Regression Trees
+```{r}
+#can we fiddle with cost_complexity?
+dt_mod <- decision_tree(cost_complexity = 0.001) |>
+  set_mode(mode = "regression") |>
+  set_engine(engine = "rpart")
+
+dt_wf <- workflow() |>
+  add_recipe(bike_rec) |>
+  add_model(dt_mod)
+
+dt_res <- dt_wf |>
+  fit_resamples(resamples = data_folds)
+
+dt_metrics <- dt_res |>
+  collect_metrics(summarize = FALSE) |>
+  filter(.metric == "rmse")
+
+```
+#LASSO
+```{r}
+  #tbh i dont think we should include this I can't tell how its different from ridge
+  lasso_mod <- linear_reg(penalty = 2, mixture = 1) |>
+    set_mode(mode = "regression") |>
+    set_engine(engine = "glmnet")  
+  
+  lasso_wf <- workflow() |>
+    add_recipe(recipe = bike_rec) |>
+    add_model(spec = lasso_mod)
+  
+  lasso_wf |>
+    fit(data = data_train) |>
+    extract_fit_parsnip() |>
+    tidy() |>
+    mutate(penalty = 2)
+  
+
+
+
+```
+
+
+#Bagging
+
+
 
 #RMSEs
 ```{r}
 # Calculate RMSE
 lm_mean_rmse  <- mean(lm_metrics$.estimate)
 knn_mean_rmse <- mean(knn_metrics_final$.estimate)
-rf_mean_rmse  <- mean(rm_metrics$.estimate)
-ridge_mean_rmse <- mean(ridge_rmse$.estimate)
+rf_mean_rmse  <- mean(rf_metrics_final$.estimate)
+ridge_mean_rmse <- mean(ridge_rmse$mean)
+dt_mean_rmse <- mean(dt_metrics$.estimate)
 ```
 
+#RMSE Visualizations
 ```{r}
-## Visualizations maybe?
 
 ggplot(lm_metrics, aes(x = id, y = .estimate)) +
   geom_point() +
