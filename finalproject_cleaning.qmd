@@ -2,6 +2,8 @@
 title: "Untitled"
 format: html
 editor: visual
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## Cleaning
@@ -14,11 +16,49 @@ library(dplyr)
 library(lubridate)
 library(recipes)
 ```
+###Lagging Data by 3 weeks
+
+```{r}
+data <- data |> 
+  select(date:Howard.Rd...Suitland.Pkwy.SE)
+
+data$ridership <- data$New.Hampshire.Ave...T.St.NW
+
+data <- data |>
+  select(date, ridership, New.Hampshire.Ave...T.St.NW, everything())
+
+data_lead <- data |>
+  mutate(
+    ridership = lead(ridership, n = 21),
+    date = lead(date, n = 21))
+
+write.csv(data_lead, "lead_data.csv", row.names = FALSE)
+
+```
+
+#Readding Weather
+```{r}
+weather01 <- read.csv("data/weather01.csv")
+weather02 <- read.csv("data/weather02.csv")
+weather <- bind_rows(weather01, weather02)
+
+ names(weather)[2] <- "date"
+
+with_weather <- merge(data_lead, weather, by = "date")
+
+write.csv(with_weather, "lead_data_weather.csv", row.names = FALSE)
+
+```
 
 ### Holiday
 
 ```{r}
+data <- read.csv("lead_data_weather.csv")
+
 data$date <- as.Date(as.character(data$date))
+
+data <- data |>
+  select(date:Howard.Rd...Suitland.Pkwy.SE, tempmax:precip, precipcover, snow:windspeed)
 
 data_rec <- recipe(~., data = data) |>
   step_holiday(date,
@@ -28,12 +68,9 @@ data_rec <- recipe(~., data = data) |>
 
 data_rec_prep <- prep(data_rec)
 data <- bake(data_rec_prep, new_data = NULL)
-## make new variable for is this a holiday
-#step_holiday(holidays = timeDate::listHolidays("US"))
 ```
 
 ### Weather Dummies
-
 ```{r}
 data <- data |> mutate(
   precip_dum = if_else(precip>0,1,0),
@@ -42,13 +79,5 @@ data <- data |> mutate(
 ```
 
 ```{r}
-data_limited <- data |>
-  select(date,New.Hampshire.Ave...T.St.NW, precip_dum, snow_dum) |>
-  filter(date == "2023-12-19" | date == "2024-12-19")
-
-View(data_limited)
-```
-
-```{r}
-write.csv(data, "final_net_daily_bike_usage_22_25_weather.csv", row.names = FALSE)
+write.csv(data, "final_lead_data_weather.csv", row.names = FALSE)
 ```
