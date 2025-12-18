@@ -16,7 +16,7 @@ library(glmnet)
 library(ranger)
 library(kknn)
 library(rsample)
-library(tidy)
+library(tidymodels)
 ```
 
 #model making
@@ -45,12 +45,13 @@ data_folds <- vfold_cv(data = data_train, v = 10, repeats = 5)
 
 ```{r}
 #Recipe
-bike_rec <- data_train |>
-  recipe(ridership ~ .) |>
-   step_zv(all_predictors()) |>
-   step_nzv(all_predictors()) 
-
- 
+bike_rec <- recipe(ridership ~ ., data = data_train) |>
+  update_role(date, new_role = "id") |>
+  step_zv(all_predictors()) |>
+  step_dummy(all_nominal_predictors()) |>
+  step_nzv(all_predictors()) |>
+  step_lincomb(all_numeric_predictors()) |>
+  step_corr(all_numeric_predictors(), threshold = 0.9)
 
 ```
 
@@ -74,6 +75,7 @@ lm_metrics <- lm_res |>
   collect_metrics(summarize = FALSE) |>
   filter(.metric == "rmse")
 ```
+
 
 ```{r}
 #KNN
@@ -138,6 +140,10 @@ rf_resample <- tune_grid(
   metrics = metric_set(rmse)
 )
 
+rm_metrics <- rf_resample |>
+  collect_metrics(summarize = FALSE) |>
+  filter(.metric == "rmse")
+
 ```
 
 ```{r}
@@ -151,9 +157,31 @@ rf_resample <- tune_grid(
     add_recipe(recipe = bike_rec) |>
     add_model(spec = ridge_mod)
 
-  ridge_resamples <- fit_resamples(ridge_wf, resamples = cv_folds)
+  ridge_resamples <- fit_resamples(ridge_wf, resamples = data_folds)
   
   ridge_rmse <- collect_metrics(ridge_resamples) |>
   filter(.metric == "rmse")
 
+```
+
+```{r}
+# Calculate RMSE
+lm_mean_rmse  <- mean(lm_metrics$.estimate)
+knn_mean_rmse <- mean(knn_metrics_final$.estimate)
+rf_mean_rmse  <- mean(rm_metrics$.estimate)
+ridge_mean_rmse <- mean(ridge_rmse$.estimate)
+```
+
+```{r}
+## Visualizations maybe?
+
+ggplot(lm_metrics, aes(x = id, y = .estimate)) +
+  geom_point() +
+  labs(title = "RMSE across folds – Linear regression",
+       x = "Fold", y = "RMSE") +
+  theme_minimal()
+```
+
+```{r}
+## Estimate the out-of-sample error rate?
 ```
