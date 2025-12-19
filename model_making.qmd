@@ -211,24 +211,26 @@ dt_metrics <- dt_res |>
 ```
 #LASSO
 ```{r}
-  #tbh i dont think we should include this I can't tell how its different from ridge
-  lasso_mod <- linear_reg(penalty = 2, mixture = 1) |>
-    set_mode(mode = "regression") |>
-    set_engine(engine = "glmnet")  
+lasso_mod <- linear_reg(penalty = tune(), mixture = 1) |>
+  set_mode(mode = "regression") |>
+  set_engine(engine = "glmnet")
   
-  lasso_wf <- workflow() |>
+lasso_wf <- workflow() |>
     add_recipe(recipe = bike_rec) |>
     add_model(spec = lasso_mod)
+
+lasso_grid <- grid_regular(penalty(range = c(-4, 2)), levels = 30)
   
-  lasso_wf |>
-    fit(data = data_train) |>
-    extract_fit_parsnip() |>
-    tidy() |>
-    mutate(penalty = 2)
+lasso_tune_res <- tune_grid(
+  lasso_wf,
+  resamples = data_folds,
+  grid = lasso_grid
+)
   
-
-
-
+lasso_metrics <- lasso_tune_res |>
+  collect_metrics() |>
+  filter(.metric == "rmse")
+  
 ```
 
 
@@ -244,6 +246,7 @@ knn_mean_rmse <- mean(knn_metrics_final$.estimate)
 rf_mean_rmse  <- mean(rf_metrics_final$.estimate)
 ridge_mean_rmse <- mean(ridge_rmse$mean)
 dt_mean_rmse <- mean(dt_metrics$.estimate)
+lass_mean_rmse <- mean(lasso_metrics$mean)
 ```
 
 #RMSE Visualizations
