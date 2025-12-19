@@ -123,7 +123,7 @@ knn_metrics_final <- knn_res_final |>
 rf <- rand_forest(
   mtry = tune(),
   min_n = tune(),
-  trees = 300
+  trees = 500
 ) |>
   set_mode("regression") |>
   set_engine("ranger",
