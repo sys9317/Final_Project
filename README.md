@@ -167,3 +167,4 @@ of activity. We then compute the total rides per day for each station
 ***CLARIFY WITH YOSUP IF IT'S PER STATION OR ACROSS ALL STATIONS***. Lastly, we 
 look for monthly trends
 
+[See our Bibliography](bibliography.md)
