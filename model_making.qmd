@@ -18,6 +18,7 @@ library(ranger)
 library(kknn)
 library(rsample)
 library(tidymodels)
+library(broom)
 ```
 
 #Data Split and Folds
@@ -167,6 +168,10 @@ rf_metrics_final <- rf_res_final |>
 
 rf_mean_rmse  <- mean(rf_metrics_final$.estimate)
 
+
+#capturing best parameters
+best
+
 ```
 
 #Ridge Model
@@ -251,6 +256,8 @@ lass_mean_rmse <- mean(lasso_metrics$mean)
 
 #RMSE Visualizations
 ```{r}
+#either fill this out with all models or delete
+#just nice to show him we can do visuals too lol
 
 ggplot(lm_metrics, aes(x = id, y = .estimate)) +
   geom_point() +
@@ -259,6 +266,37 @@ ggplot(lm_metrics, aes(x = id, y = .estimate)) +
   theme_minimal()
 ```
 
+#Out of Sample RMSE
 ```{r}
-## Estimate the out-of-sample error rate?
+
+final_fit <-
+  rf_wf_final |>
+  last_fit(data_split)
+
+test_pred <- predict(extract_workflow(final_fit), data_test)
+
+#Gathering RMSE
+test_rmse <- data_test |>
+  mutate(.pred = test_pred$.pred) |>
+  rmse(truth = ridership, estimate = .pred)
+
+#RMSE:
+test_rmse[[3]]
+
+```
+Out of Sample RMSE = 7.9286
+Not too shabby
+
+#Final Predictions
+```{r}
+predictions <- predict(extract_workflow(final_fit), bike_implementation)
+
+predictions
+
+results <- data |>
+  slice(1380:1409) |>
+  select(date, ridership)
+
+results$predictions <- predictions 
+
 ```
