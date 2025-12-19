@@ -40,17 +40,25 @@ with our original dataset and save it as:
 
 ## QMD#2: summary stats.qmd
 
-In this QMD, we start by making the date column of our dataset function as a 
-date instead of a string of characters. We then make all of our station
-variables numeric. Next, we reshape our data to appear as long instead of wide 
-so we can look at activity by station. We calculate each stations total rides, 
-average rides, and days with usage. Rides include bikes leaving from a station
-and bikes arriving at a station. 
+In this QMD, we process daily bike usage data, which has been merged with 
+weather information, in order to analyze the capital bike ride activity 
+patterns at the individual station level. 
+We start by making the date column of our dataset function as a date instead 
+of a string of characters. We then make all of our station variables numeric. 
+Next, we reshape our data from a wide format, where each station is a column, 
+into a long format so we can look at activity by station. We calculate each 
+station's total rides, average rides, and days with usage. Rides include bikes 
+leaving from a station and bikes arriving at a station.
 
-To identify the most active or popular stations, we sort by the highest amount
-of activity. We then compute the total rides per day for each station
-***CLARIFY WITH YOSUP IF IT'S PER STATION OR ACROSS ALL STATIONS***. Lastly, we 
-look for monthly trends
+To identify the most active or popular stations, we sort by the highest amount 
+of activity. We then compute the total rides per day for each station.
+In the end, there will be three main sources of overall bike station usage. 
+total_rides: sum of all rides for each station
+mean_daily_rides: Average rides per day for each station
+station_daily_summary
+mean, median, standard deviation of ride activities for each station
+Late, top_10_stations displays the 10 busiest/most used stations by total volume. 
+
 
 ## QMD#3: finalproject_cleaning.qmd
 After reading in the CSV we created in the reorg_cap_data_test.qmd and
@@ -123,8 +131,8 @@ nearly all) observations
 - turns categorical variables into dummy variables (so 
 the day of the week column would instead be treated as seven individual 0/1
 columns)
-- removes exact linear combinations ***EXPLAIN*** and removes highly correlated
-predictors to reduce multicollinearity and overfitting
+- Identifies variables that can be formed as a linear combination of other 
+variables and removes highly correlated predictors to reduce multicollinearity and overfitting
 - normalizes predictors, setting the mean at 0 and the standard deviation at 1
 
 After creating our recipe, we incorporate it into our various models: linear
@@ -162,9 +170,5 @@ implementation data and attaches those predictions to the dates we care about.
 We then attach the predictions to our results table, which has a column for
 date, ridership, and predictions.
 
-To identify the most active or popular stations, we sort by the highest amount
-of activity. We then compute the total rides per day for each station
-***CLARIFY WITH YOSUP IF IT'S PER STATION OR ACROSS ALL STATIONS***. Lastly, we 
-look for monthly trends
 
 [See our Bibliography](bibliography.md)
