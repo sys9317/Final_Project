@@ -36,22 +36,7 @@ station_summary <- bike_long |>
 top_10_stations <- head(station_summary, 10)
 print(top_10_stations)
 
-# Daily total ride and daily activity summary
-daily_totals <- bike_long |>
-  group_by(date) |>
-  summarise(total_rides = sum(rides, na.rm = TRUE))
-
-daily_summary <- daily_totals |>
-  summarise(
-    mean_rides   = mean(total_rides, na.rm = TRUE),
-    median_rides = median(total_rides, na.rm = TRUE),
-    sd_rides     = sd(total_rides, na.rm = TRUE),
-    min_rides    = min(total_rides, na.rm = TRUE),
-    max_rides    = max(total_rides, na.rm = TRUE)
-  )
-
-print(daily_summary)
-
+# Daily summary of ride activity by each station
 station_daily_summary <- bike_long |>
   group_by(station) |>
   summarise(
@@ -61,20 +46,3 @@ station_daily_summary <- bike_long |>
     min_rides    = min(rides, na.rm = TRUE),
     max_rides    = max(rides, na.rm = TRUE)
   )
-
-
-# 7. Monthly trends: aggregate daily totals by year‑month
-monthly_summary <- daily_totals |>
-  mutate(month = floor_date(date, "month")) |>
-  group_by(month) |>
-  summarise(
-    monthly_rides = sum(total_rides),
-    mean_daily    = mean(total_rides)
-  ) |>
-  arrange(month)
-
-print(monthly_summary)
-
-# I googled how to use floor_date, not sure if that's fine lol
-
-# Maybe we can look up correlation..?
