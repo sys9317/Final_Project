@@ -203,8 +203,7 @@ date, ridership, and predictions.
 
 While the random forest model created is the best out of every model attempted, it still fails to accurately predict net bike activity at the New Hampshire/T Street station, with an RMSE of 7.9. As you can see in the screenshot below of our predictions next to the true results for November 2025, the predictions are somewhat accurate at best, and more typically, wildly inaccurate at worst.
 
-**Insert picture of results here
-**
+<img src="results.png" alt="Prediction Results Table" width="400"/>
 
 Interestingly, almost every single predicted value is negative, predicting that more stations will leave the station than enter. This could be because of the overall average net activity at New Hampshire/T Street. What’s more interesting is the predicted values rarely stray away from zero, with some of the most extreme values being -2 or -3. This is shocking, given that some days the net activity is as high as 23 and low as -20, so we would expect at least some predictions to be in this range. 
 
