@@ -24,6 +24,7 @@ library(broom)
 #Data Split and Folds
 ```{r}
 data <- read.csv("final_lead_data_weather.csv")
+#data <- read.csv(final_lead_limited_data_weather.csv")
 
 data$weekday <- wday(data$date, label = TRUE)
 data$month <- month(data$date, label = TRUE)
