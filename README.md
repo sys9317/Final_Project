@@ -1,6 +1,35 @@
 # Final_Project
 
-## QMD #1: reorg_cap_data_test.qmd
+## Introduction - Story and Thought Process
+
+Capital Bikeshare is a vital component of the transit system in Washington, D.C., however it has a recurring "rebalancing" issue. We've all witnessed it: downtown docks overflow, making it impossible for riders to park, and bike docs in residential areas lie empty by 10:00 AM as commuters rush downtown. We believe that this imbalance generates unmet-demand - users who want to ride but can't find a bike, or want to park but can't find a dock. Even though Capital Bikeshare uses their vans to manually move and relocate bikes, users do not have data on their schedules or specific refill times. Therefore, our project aims to solve this problem by building a Capital Bikeshare predictive model. The project uses historical capital bikeshare trip data from 2022 to 2025 with weather data from National Oceanic and Atmospheric Administration (NOAA). Ultimately, this model could help predicting which station would need more refills or  preemptively deploy vans to the right stations before the imbalance occurs.
+
+For this analysis, our main statistic was Net Daily Activity, which is the total number of arrivals per day minus total departures at a given station. We selected this over simple "Departures" or "Arrivals" to account for the specific limitations of our data:
+1) Overcoming the "Unobservable" Van refill Problem: Although we are aware that rebalancing vans transport bicycles between stations, the dataset does not show us when this occurs. Regardless of whether the supply was intentionally or naturally replenished, we can measure the net volume of activity at a station to determine the overall activities that were applied.
+2) Capturing Station "Popularity": Determining what constitutes a "popular" station is our aim. The intricacy of mixed-use stations is overlooked when just one-way trips (commutes) are tracked. We can discover high-traffic hubs that act as both sources and destinations throughout the day thanks to net activity.
+
+Although we are aware that Capital Bikeshare uses vans to relocate bikes from one station to other stations in order to meet unmet demand, the open-data that has been used for this project do not contain this operational data. As a result, our dataset contains an "unobservable" factor.
+
+This has two important effects on our metric: 
+
+1) Natural vs. Artificial Supply: We are unable to determine whether a dock was made available by a van manually replenishing it or by a rider returning a bike. As a result, rather than measuring only natural demand, our metric measures serviced demand.
+Thus, we must make assumptions whether some bike stations are always full at the beginning of the day or not, and has that been considered into the data.
+
+2) Inflation of Popularity: A station may seem to have high "Net Activity" just because vehicles regularly replenish it to accommodate high turnover. This suggests that the stations in our model that are "most popular" could be the stations that actually have popular use from users or  getting the most van support from Capital Bikeshare.
+
+### Choosing a Station
+
+We decided to build our predictive model around the net activity of the New Hampshire Ave/T Street bike station. We chose this one because it had the second highest aggregate activity levels out of all stations, and a high negative net rating of -16, meaning on average there are 16 less bikes to end the day than to start. Given its proximity to Dupont Circle, U Street, and Adams Morgan, this seemed like a perfect station to analyze and try to predict.
+
+## Our Data
+
+Our main dataset comes from Capital Bike themselves, which publishes every month their ridership activity onto csv files. Each dataset contains observations at the individual ride level, showing where a given ride starts, ends, and some additional details on their membership or what kind of bike they used. For the sake of our project, all we care about is where a given ride started and ended. Also, we needed the data to be transformed so each observation is a day, with variables for every station showing how many rides started and ended on each station each day. 
+
+We also included weather data in DC from the National Oceanic and Atmospheric Administration, an online database of weather stations across the country. We understood that a big factor in whether someone chooses to ride a bike or not is the weather, such as if it’s too cold or rainy vs a calm sunny day. Through NOAA, we were able to find recorded weather in DC for our entire timeframe, with details from min/max temperatures, humidity, snow or rain levels, and even wind strength.
+
+## Implementation
+
+### QMD #1: reorg_cap_data_test.qmd
 
 In this QMD, we start by downloading the monthly Capital Bikeshare CSVs from
 January 2022-November 2025, which total 47 CSVs. We then create a function that 
@@ -38,7 +67,7 @@ downloaded them separately and merged them. We then merge our weather dataset
 with our original dataset and save it as: 
 "net_daily_bike_usage_22_25_weather.csv"
 
-## QMD#2: summary stats.qmd
+### QMD#2: summary stats.qmd
 
 In this QMD, we process daily bike usage data, which has been merged with 
 weather information, in order to analyze the capital bike ride activity 
@@ -60,7 +89,7 @@ mean, median, standard deviation of ride activities for each station
 Late, top_10_stations displays the 10 busiest/most used stations by total volume. 
 
 
-## QMD#3: finalproject_cleaning.qmd
+### QMD#3: finalproject_cleaning.qmd
 After reading in the CSV we created in the reorg_cap_data_test.qmd and
 downloading the necessary libraries, we begin our setup for the model. Our first
 step is lagging the data by 3 weeks. This means that the data in the columns
@@ -108,7 +137,7 @@ complement our general weather X variable with variables representing whether it
 rained and whether it snowed. We then saved our dataset as:
 "final_lead_data_weather.csv."
 
-## QMD#4: model_making.qmd
+### QMD#4: model_making.qmd
 
 After loading all of the necessary libraries, we use the date variable to 
 extract weekday, month, and yearday (so January 2 would be yearday 2). These 
@@ -169,6 +198,39 @@ Our last block of code, "Final Predictions," makes predictions for the
 implementation data and attaches those predictions to the dates we care about. 
 We then attach the predictions to our results table, which has a column for
 date, ridership, and predictions.
+
+## Evaluating our Model and Solution
+
+While the random forest model created is the best out of every model attempted, it still fails to accurately predict net bike activity at the New Hampshire/T Street station, with an RMSE of 7.9. As you can see in the screenshot below of our predictions next to the true results for November 2025, the predictions are somewhat accurate at best, and more typically, wildly inaccurate at worst.
+
+**Insert picture of results here
+**
+
+Interestingly, almost every single predicted value is negative, predicting that more stations will leave the station than enter. This could be because of the overall average net activity at New Hampshire/T Street. What’s more interesting is the predicted values rarely stray away from zero, with some of the most extreme values being -2 or -3. This is shocking, given that some days the net activity is as high as 23 and low as -20, so we would expect at least some predictions to be in this range. 
+
+After getting these results, we debated a number of possible reasons our model may be off. First, we reran the same modeling process on a couple other stations, Columbus Circle/Union Station and 11th/Clifton St, however the resulting RMSE’s from these stations predictive models were even worse than New Hampshire/T Street’s. Clearly, the results at New Hampshire/T Street are not a fluke, and if anything seem more predictable than other stations.
+
+Next, we changed how long the lag was between today’s activity and previous activity in the testing data. Initially, it was 21 days, but we reran the modeling program with a lag of 14 days, 10, and even 2, but saw little significant change in the RMSE. The lag time in station activity did not seem to be the missing factor either.
+
+We then experimented with the recipe steps being used on the models. We realized some of the steps we had included were not having very much actual impact on the data, but saw no significant changes no matter what steps we included/removed.
+
+Finally, we realized that the way our data was initially set up was creating several hundred zero values for stations that did not exist during the entire timeframe collected. For example, if a station was only opened in 2024, the data for this station prior to opening was a long list of zeros. Certainly, this is what’s causing the predictions to be so inaccurate and close to near zero! But, after recreating the dataset to only include the 578 stations that were always open from 1/1/22 - 11/30/25, we reran the modeling program once more, only to get an RMSE of 7.6. While this was indeed an improvement, it was nowhere near where we’d hope to see.
+
+Retrying the above fixes (change station, change lag time) on the new, tighter dataset yield similarly unchanged results.
+
+As the deadline for this project neared, we contemplated trying out what a logged version of the variable in question would look like, and if that could increase our predictability. Perhaps if we had more time to explore the topic, it would prove fruitful, but ultimately we were unable to implement such a solution.
+
+
+## What Went Wrong
+
+After concluding our attempts to improve the model, we discussed what information our model is missing. As discussed in the introduction, our data used is unable to capture the activity of Capital Bike vans that move bikes from one location to another to balance stations out. We concluded that this must be playing at least some role in how bike activity rises and falls.
+
+Another factor is the extreme variance in bike activity, with some days having 0, 1, or -2, and other days having 16, -20, or 23, with little in between. This of course is naturally going to create a high RMSE, as these extreme values seem hard to predict, and the model is punished hard when doing so. Beyond Capital Bike resupply activity, there is clearly something we are missing that is deeply affected activity, and resulting in large swings from the 10’s to near zero every other day.
+
+## What Could Go Right
+
+An original idea we had for data collection was to use Capital Bike’s station API data, which keeps track in live time the actual bike count at every station in the DMV area. Having access to actual station numbers, and truly knowing how many bikes are there and how many slots are available, rather than using net activity as a proxy, would produce a much more accurate model. However, Capital Bike does not store this information the way it does its rider history, and we would not be able to collect enough data in the allotted time to produce a robust model. Perhaps with enough time, collecting enough API data would be possible, and the model making process could resume with station data rather than net activity. We predict this would yield more meaningful results.
+
 
 
 [See our Bibliography](bibliography.md)
