@@ -1,5 +1,11 @@
 # Final_Project
 
+### Table of Contents
+* [Introduction](https://github.com/sys9317/Final_Project/blob/main/README.md#introduction---story-and-thought-process)
+* [Our Data](https://github.com/sys9317/Final_Project/blob/main/README.md#our-data)
+* [Implementation](https://github.com/sys9317/Final_Project/blob/main/README.md#implementation)
+* [Evaluation](https://github.com/sys9317/Final_Project/blob/main/README.md#evaluating-our-model-and-solution)
+
 ## Introduction - Story and Thought Process
 
 Capital Bikeshare is a vital component of the transit system in Washington, D.C., however it has a recurring "rebalancing" issue. We've all witnessed it: downtown docks overflow, making it impossible for riders to park, and bike docs in residential areas lie empty by 10:00 AM as commuters rush downtown. We believe that this imbalance generates unmet-demand - users who want to ride but can't find a bike, or want to park but can't find a dock. Even though Capital Bikeshare uses their vans to manually move and relocate bikes, users do not have data on their schedules or specific refill times. Therefore, our project aims to solve this problem by building a Capital Bikeshare predictive model. The project uses historical capital bikeshare trip data from 2022 to 2025 with weather data from National Oceanic and Atmospheric Administration (NOAA). Ultimately, this model could help predicting which station would need more refills or  preemptively deploy vans to the right stations before the imbalance occurs.
@@ -220,13 +226,13 @@ Retrying the above fixes (change station, change lag time) on the new, tighter d
 As the deadline for this project neared, we contemplated trying out what a logged version of the variable in question would look like, and if that could increase our predictability. Perhaps if we had more time to explore the topic, it would prove fruitful, but ultimately we were unable to implement such a solution.
 
 
-## What Went Wrong
+### What Went Wrong
 
 After concluding our attempts to improve the model, we discussed what information our model is missing. As discussed in the introduction, our data used is unable to capture the activity of Capital Bike vans that move bikes from one location to another to balance stations out. We concluded that this must be playing at least some role in how bike activity rises and falls.
 
 Another factor is the extreme variance in bike activity, with some days having 0, 1, or -2, and other days having 16, -20, or 23, with little in between. This of course is naturally going to create a high RMSE, as these extreme values seem hard to predict, and the model is punished hard when doing so. Beyond Capital Bike resupply activity, there is clearly something we are missing that is deeply affected activity, and resulting in large swings from the 10’s to near zero every other day.
 
-## What Could Go Right
+### What Could Go Right
 
 An original idea we had for data collection was to use Capital Bike’s station API data, which keeps track in live time the actual bike count at every station in the DMV area. Having access to actual station numbers, and truly knowing how many bikes are there and how many slots are available, rather than using net activity as a proxy, would produce a much more accurate model. However, Capital Bike does not store this information the way it does its rider history, and we would not be able to collect enough data in the allotted time to produce a robust model. Perhaps with enough time, collecting enough API data would be possible, and the model making process could resume with station data rather than net activity. We predict this would yield more meaningful results.
 
