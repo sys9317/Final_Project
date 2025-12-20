@@ -1,0 +1,336 @@
+---
+title: "reorg_cap_data_test"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(dplyr)
+```
+
+#downloading data
+
+```{r}
+data01 <- read.csv("data/202201-capitalbikeshare-tripdata.csv")
+data02 <- read.csv("data/202202-capitalbikeshare-tripdata.csv")
+data03 <- read.csv("data/202203-capitalbikeshare-tripdata.csv")
+data04 <- read.csv("data/202204-capitalbikeshare-tripdata.csv")
+data05 <- read.csv("data/202205-capitalbikeshare-tripdata.csv")
+data06 <- read.csv("data/202206-capitalbikeshare-tripdata.csv")
+data07 <- read.csv("data/202207-capitalbikeshare-tripdata.csv")
+data08 <- read.csv("data/202208-capitalbikeshare-tripdata.csv")
+data09 <- read.csv("data/202209-capitalbikeshare-tripdata.csv")
+data10 <- read.csv("data/202210-capitalbikeshare-tripdata.csv")
+data11 <- read.csv("data/202211-capitalbikeshare-tripdata.csv")
+data12 <- read.csv("data/202212-capitalbikeshare-tripdata.csv")
+
+data13 <- read.csv("data/202301-capitalbikeshare-tripdata.csv")
+data14 <- read.csv("data/202302-captialbikeshare-tripdata.csv")
+data15 <- read.csv("data/202303-capitalbikeshare-tripdata.csv")
+data16 <- read.csv("data/202304-capitalbikeshare-tripdata.csv")
+data17 <- read.csv("data/202305-capitalbikeshare-tripdata.csv")
+data18 <- read.csv("data/202306-capitalbikeshare-tripdata.csv")
+data19 <- read.csv("data/202307-capitalbikeshare-tripdata.csv")
+data20 <- read.csv("data/202308-capitalbikeshare-tripdata.csv")
+data21 <- read.csv("data/202309-capitalbikeshare-tripdata.csv")
+data22 <- read.csv("data/202310-capitalbikeshare-tripdata.csv")
+data23 <- read.csv("data/202311-capitalbikeshare-tripdata.csv")
+data24 <- read.csv("data/202312-capitalbikeshare-tripdata.csv")
+
+data25 <- read.csv("data/202401-capitalbikeshare-tripdata.csv")
+data26 <- read.csv("data/202402-capitalbikeshare-tripdata.csv")
+data27 <- read.csv("data/202403-capitalbikeshare-tripdata.csv")
+data28 <- read.csv("data/202404-capitalbikeshare-tripdata.csv")
+data29 <- read.csv("data/202405-capitalbikeshare-tripdata.csv")
+data30 <- read.csv("data/202406-capitalbikeshare-tripdata.csv")
+data31 <- read.csv("data/202407-capitalbikeshare-tripdata.csv")
+data32 <- read.csv("data/202408-capitalbikeshare-tripdata.csv")
+data33 <- read.csv("data/202409-capitalbikeshare-tripdata.csv")
+data34 <- read.csv("data/202410-capitalbikeshare-tripdata.csv")
+data35 <- read.csv("data/202411-capitalbikeshare-tripdata.csv")
+data36 <- read.csv("data/202412-capitalbikeshare-tripdata.csv")
+
+data37 <- read.csv("data/202501-capitalbikeshare-tripdata.csv")
+data38 <- read.csv("data/202502-capitalbikeshare-tripdata.csv")
+data39 <- read.csv("data/202503-capitalbikeshare-tripdata.csv")
+data40 <- read.csv("data/202504-capitalbikeshare-tripdata.csv")
+data41 <- read.csv("data/202505-capitalbikeshare-tripdata.csv")
+data42 <- read.csv("data/202506-capitalbikeshare-tripdata.csv")
+data43 <- read.csv("data/202507-capitalbikeshare-tripdata.csv")
+data44 <- read.csv("data/202508-capitalbikeshare-tripdata.csv")
+data45 <- read.csv("data/202509-capitalbikeshare-tripdata.csv")
+data46 <- read.csv("data/202510-capitalbikeshare-tripdata.csv")
+data47 <- read.csv("data/202511-capitalbikeshare-tripdata.csv")
+```
+
+#cleaning data
+
+```{r}
+#removing all unnecessary variable columns and NA values for start_station and end_station. These observations are E-Bikes that did not use a station, thus not relevant to our study.
+
+delete_na <- function(data){
+data <- data |>
+  select(started_at, start_station_name, start_station_id, end_station_name, end_station_id)
+data$started_at <- as_date(data$started_at)
+
+data <- data |>
+  filter(!is.na(start_station_id)) |>
+  filter(!is.na(end_station_id))
+
+return (data)
+}
+
+data01 <- delete_na(data01)
+data02 <- delete_na(data02)
+data03 <- delete_na(data03)
+data04 <- delete_na(data04)
+data05 <- delete_na(data05)
+data06 <- delete_na(data06)
+data07 <- delete_na(data07)
+data08 <- delete_na(data08)
+data09 <- delete_na(data09)
+data10 <- delete_na(data10)
+data11 <- delete_na(data11)
+data12 <- delete_na(data12)
+
+data13 <- delete_na(data13)
+data14 <- delete_na(data14)
+data15 <- delete_na(data15)
+data16 <- delete_na(data16)
+data17 <- delete_na(data17)
+data18 <- delete_na(data18)
+data19 <- delete_na(data19)
+data20 <- delete_na(data20)
+data21 <- delete_na(data21)
+data22 <- delete_na(data22)
+data23 <- delete_na(data23)
+data24 <- delete_na(data24)
+
+data25 <- delete_na(data25)
+data26 <- delete_na(data26)
+data27 <- delete_na(data27)
+data28 <- delete_na(data28)
+data29 <- delete_na(data29)
+data30 <- delete_na(data30)
+data31 <- delete_na(data31)
+data32 <- delete_na(data32)
+data33 <- delete_na(data33)
+data34 <- delete_na(data34)
+data35 <- delete_na(data35)
+data36 <- delete_na(data36)
+ 
+data37 <- delete_na(data37)
+data38 <- delete_na(data38)
+data39 <- delete_na(data39)
+data40 <- delete_na(data40)
+data41 <- delete_na(data41)
+data42 <- delete_na(data42)
+data43 <- delete_na(data43)
+data44 <- delete_na(data44)
+data45 <- delete_na(data45)
+data46 <- delete_na(data46)
+data47 <- delete_na(data47)
+```
+
+#pivoting data
+
+```{r}
+laststop <- function(data){
+
+#Split the data into two files, one for just trip starts, and one for trip ends
+ starts <-  data |>
+  group_by(started_at) |>
+  count(start_station_name)
+ names(starts)[2] <- "station"
+ names(starts)[3] <- "start_count"
+
+ ends <-  data |>
+  group_by(started_at) |>
+  count(end_station_name)
+  names(ends)[2] <- "station"
+  names(ends)[3] <- "end_count"
+  
+#Pivot both data sets so each observation is a day of the month and each variable is a station, calculating how many trips started/end at that station
+  start_wide <- starts |>
+  pivot_wider(
+    names_from = station,
+    values_from = start_count
+  )
+start_wide[is.na(start_wide)] <- 0
+
+  end_wide <- ends |>
+  pivot_wider(
+    names_from = station,
+    values_from = end_count
+  )
+end_wide[is.na(end_wide)] <- 0
+
+#Merge the two files back together, showing on each day how many trips
+#started and ended at every station
+merged_counts <- merge(start_wide, end_wide, by = c("started_at"))
+
+#Calculate net activity at every station, subtracting start data (bikes leaving a station) from end data (bikes arriving)
+base_names <- unique(sub("\\.[xy]$", "", names(merged_counts)))
+for (nm in base_names) {
+  x_col <- paste0(nm, ".x")
+  y_col <- paste0(nm, ".y")
+  if (x_col %in% names(merged_counts) && y_col %in% names(merged_counts)) {
+    merged_counts[[nm]] <- merged_counts[[y_col]] - merged_counts[[x_col]]
+  }
+}
+
+#removing the original start and end data, notated by the .x or .y ending their column names
+merged_counts <- merged_counts[, !grepl("\\.[xy]$", names(merged_counts))]
+
+#changing date variable to be titled as such
+names(merged_counts)[1] <- "date"
+
+return(merged_counts)
+}
+```
+
+#conducting net transformation
+
+```{r}
+data01 <- laststop(data01)
+data02 <- laststop(data02)
+data03 <- laststop(data03)
+data04 <- laststop(data04)
+data05 <- laststop(data05)
+data06 <- laststop(data06)
+data07 <- laststop(data07)
+data08 <- laststop(data08)
+data09 <- laststop(data09)
+data10 <- laststop(data10)
+data11 <- laststop(data11)
+data12 <- laststop(data12)
+
+data13 <- laststop(data13)
+data14 <- laststop(data14)
+data15 <- laststop(data15)
+data16 <- laststop(data16)
+data17 <- laststop(data17)
+data18 <- laststop(data18)
+data19 <- laststop(data19)
+data20 <- laststop(data20)
+data21 <- laststop(data21)
+data22 <- laststop(data22)
+data23 <- laststop(data23)
+data24 <- laststop(data24)
+
+data25 <- laststop(data25)
+data26 <- laststop(data26)
+data27 <- laststop(data27)
+data28 <- laststop(data28)
+data29 <- laststop(data29)
+data30 <- laststop(data30)
+data31 <- laststop(data31)
+data32 <- laststop(data32)
+data33 <- laststop(data33)
+data34 <- laststop(data34)
+data35 <- laststop(data35)
+data36 <- laststop(data36)
+ 
+data37 <- laststop(data37)
+data38 <- laststop(data38)
+data39 <- laststop(data39)
+data40 <- laststop(data40)
+data41 <- laststop(data41)
+data42 <- laststop(data42)
+data43 <- laststop(data43)
+data44 <- laststop(data44) 
+data45 <- laststop(data45)
+data46 <- laststop(data46)
+data47 <- laststop(data47)
+```
+
+#Merging data into one master dataset
+
+```{r}
+combined <- bind_rows(data01, data02)
+combined <- bind_rows(combined, data03)
+combined <- bind_rows(combined, data04)
+combined <- bind_rows(combined, data05)
+combined <- bind_rows(combined, data06)
+combined <- bind_rows(combined, data07)
+combined <- bind_rows(combined, data08)
+combined <- bind_rows(combined, data09)
+combined <- bind_rows(combined, data10)
+combined <- bind_rows(combined, data11)
+combined <- bind_rows(combined, data12)
+
+combined <- bind_rows(combined, data13)
+combined <- bind_rows(combined, data14)
+combined <- bind_rows(combined, data15)
+combined <- bind_rows(combined, data16)
+combined <- bind_rows(combined, data17)
+combined <- bind_rows(combined, data18)
+combined <- bind_rows(combined, data19)
+combined <- bind_rows(combined, data20)
+combined <- bind_rows(combined, data21)
+combined <- bind_rows(combined, data22)
+combined <- bind_rows(combined, data23)
+combined <- bind_rows(combined, data24)
+combined <- bind_rows(combined, data25)
+combined <- bind_rows(combined, data26)
+combined <- bind_rows(combined, data27)
+combined <- bind_rows(combined, data28)
+combined <- bind_rows(combined, data29)
+combined <- bind_rows(combined, data30)
+combined <- bind_rows(combined, data31)
+combined <- bind_rows(combined, data32)
+combined <- bind_rows(combined, data33)
+combined <- bind_rows(combined, data34)
+
+combined <- bind_rows(combined, data35)
+combined <- bind_rows(combined, data36)
+combined <- bind_rows(combined, data37)
+combined <- bind_rows(combined, data38)
+combined <- bind_rows(combined, data39)
+combined <- bind_rows(combined, data40)
+combined <- bind_rows(combined, data41)
+combined <- bind_rows(combined, data42)
+combined <- bind_rows(combined, data43)
+combined <- bind_rows(combined, data44)
+combined <- bind_rows(combined, data45)
+combined <- bind_rows(combined, data46)
+combined <- bind_rows(combined, data47)
+
+write.csv(combined, "data/withnas.csv", row.names = FALSE)
+#Deleting NA Columns instead of making them 0!
+combined <- combined |>
+  select(where(~!any(is.na(.))))
+
+
+#some of the datasets repeat days, this code removes that and tallies their totals
+combined_data <- combined %>%
+  group_by(date) %>%
+  summarise(across(where(is.numeric), sum),
+            across(where(~!is.numeric(.)), first))
+#saving file
+write.csv(combined_data, "data/limited_stations_data.csv", row.names = FALSE)
+```
+
+#adding in weather
+
+```{r}
+data <- read.csv("limit_stations_data.csv")
+data <- data |>
+  group_by(date) |>
+  summarise_if(is.numeric, sum, na.rm = TRUE)
+
+#reading in weather data (in two sets due to complications with source)
+weather01 <- read.csv("data/weather01.csv")
+weather02 <- read.csv("data/weather02.csv")
+weather <- bind_rows(weather01, weather02)
+
+ names(weather)[2] <- "date"
+
+with_weather <- merge(data, weather, by = "date")
+#saving dataset with weather included
+write.csv(with_weather, "limit_stations_data.csv_weather.csv", row.names = FALSE)
+```
