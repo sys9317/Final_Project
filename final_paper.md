@@ -283,4 +283,4 @@ produce a robust model. Perhaps with enough time, collecting enough API data wou
 making process could resume with station data rather than net activity. We predict this would yield more 
 meaningful results.
 
-
+[See our Bibliography](bibliography.md)
