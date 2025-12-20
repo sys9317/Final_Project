@@ -246,7 +246,7 @@ include the 578 stations that were always open from 1/1/22 - 11/30/25, we reran 
 only to get an RMSE of 7.6. While this was indeed an improvement, it was nowhere near where we’d hope to see.
 
 Retrying the above fixes (change station, change lag time) on the new, tighter dataset yield similarly
-unchanged results.
+unchanged results. These attempts can be seen [documented in this qmd](reorg_cap_data_test_limited.qmd).
 
 As the deadline for this project neared, we contemplated trying out what a logged version of the variable in
 question would look like, and if that could increase our predictability. Perhaps if we had more time to explore
