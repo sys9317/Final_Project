@@ -1,9 +1,9 @@
 # Final_Project
 
 ### Table of Contents
-* [Introduction](https://github.com/sys9317/Final_Project/blob/main/README.md#introduction---story-and-thought-process)
-* [Our Data](https://github.com/sys9317/Final_Project/blob/main/README.md#our-data)
-* [Implementation](https://github.com/sys9317/Final_Project/blob/main/README.md#implementation)
+* [Introduction](https://github.com/sys9317/Final_Project/blob/main/final_paper.md#introduction---story-and-thought-process)
+* [Our Data](https://github.com/sys9317/Final_Project/blob/main/final_paper.md#our-data)
+* [Implementation](https://github.com/sys9317/Final_Project/blob/main/final_paper.md#implementation)
 * [Evaluation](https://github.com/sys9317/Final_Project/blob/main/README.md#evaluating-our-model-and-solution)
 
 ## Introduction - Story and Thought Process
