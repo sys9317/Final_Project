@@ -27,6 +27,8 @@ data$ridership <- data$New.Hampshire.Ave...T.St.NW
 data <- data |>
   select(date, ridership, New.Hampshire.Ave...T.St.NW, everything())
 
+#This was run several iterations with n= 21, 14, 10, and 2. 
+#Differences in RMSE were neglible.
 data_lead <- data |>
   mutate(
     ridership = lead(ridership, n = 21),
@@ -36,7 +38,7 @@ write.csv(data_lead, "lead_data.csv", row.names = FALSE)
 
 ```
 
-#Readding Weather
+#Adding Weather
 ```{r}
 weather01 <- read.csv("data/weather01.csv")
 weather02 <- read.csv("data/weather02.csv")
@@ -50,7 +52,7 @@ write.csv(with_weather, "lead_data_weather.csv", row.names = FALSE)
 
 ```
 
-### Holiday
+### Adding Holidays
 
 ```{r}
 data <- read.csv("lead_data_weather.csv")
@@ -70,14 +72,14 @@ data_rec_prep <- prep(data_rec)
 data <- bake(data_rec_prep, new_data = NULL)
 ```
 
-### Weather Dummies
+### Adding Weather Dummies
 ```{r}
 data <- data |> mutate(
   precip_dum = if_else(precip>0,1,0),
   snow_dum = if_else(snow>0,1,0)
 )
 ```
-
+# Saving File for model making
 ```{r}
 write.csv(data, "final_lead_data_weather.csv", row.names = FALSE)
 ```
