@@ -12,7 +12,7 @@ We decided to build our predictive model around the net activity of the New Hamp
 
 In the future, we'd like to explore this model again with a different data source, coming from Capital Bike's station API data. More can be read on the concept [here](https://github.com/sys9317/Final_Project/blob/main/final_paper.md#what-could-go-right).
 
-[See our final paper](final_paper.md) discussing the project in further detail.
+[See our final paper](https://github.com/sys9317/Final_Project/blob/main/final_paper.md#final_project) discussing the project in further detail.
 
 Links to QMD files used:
 * [Organizing the Data from Capital Bike](https://github.com/sys9317/Final_Project/blob/main/reorg_cap_data_test.qmd)
