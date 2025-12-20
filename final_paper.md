@@ -221,9 +221,9 @@ accurate at best, and more typically, wildly inaccurate at worst.
 
 Interestingly, almost every single predicted value is negative, predicting that more stations will leave the 
 station than enter. This could be because of the overall average net activity at New Hampshire/T Street. What’s
-more interesting is the predicted values rarely stray away from zero, with some of the most extreme values being
--2 or -3. This is shocking, given that some days the net activity is as high as 23 and low as -20, so we would 
-expect at least some predictions to be in this range. 
+more interesting is how most of the predicted values rarely stray away from zero, with only a couple going as far as -5, -6, or
+-9. This is shocking, given that some days the net activity is as high as 23 and low as -20, so we would 
+expect at least some more predictions in this range. 
 
 After getting these results, we debated a number of possible reasons our model may be off. First, we reran the 
 same modeling process on a couple other stations, Columbus Circle/Union Station and 11th/Clifton St, however the
@@ -241,7 +241,7 @@ included/removed.
 Finally, we realized that the way our data was initially set up was creating several hundred zero values for
 stations that did not exist during the entire timeframe collected. For example, if a station was only opened 
 in 2024, the data for this station prior to opening was a long list of zeros. Certainly, this is what’s
-causing the predictions to be so inaccurate and close to near zero! But, after recreating the dataset to only 
+causing the predictions to be so inaccurate and close to near zero! But, after [recreating the dataset](reorg_cap_data_test_limited.qmd) to only 
 include the 578 stations that were always open from 1/1/22 - 11/30/25, we reran the modeling program once more,
 only to get an RMSE of 7.6. While this was indeed an improvement, it was nowhere near where we’d hope to see.
 
@@ -268,11 +268,17 @@ in large swings from the 10’s to near zero every other day.
 
 ### What Could Go Right
 
+Spending more time manipulating the data, better identifying a capture variable than net activity, and even incoporating
+more data would all likely improve our RMSE. Nothing would work better than finding a way to account for van resupplies.
+
 An original idea we had for data collection was to use Capital Bike’s station API data, which keeps track
 in live time the actual bike count at every station in the DMV area. Having access to actual station numbers,
 and truly knowing how many bikes are there and how many slots are available, rather than using net activity
-as a proxy, would produce a much more accurate model. However, Capital Bike does not store this information 
-the way it does its rider history, and we would not be able to collect enough data in the allotted time to 
+as a proxy, would produce a much more accurate model. Furthermore, we would be able to identify when a mass of bikes are moved, and attribute that movement
+to van resupply activity, allowing us to try and account for it in the modeling process.
+
+Unfortunately, Capital Bike does not store this information the way it does its rider history, 
+and we would not be able to collect enough data in the allotted time to 
 produce a robust model. Perhaps with enough time, collecting enough API data would be possible, and the model 
 making process could resume with station data rather than net activity. We predict this would yield more 
 meaningful results.
