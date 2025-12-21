@@ -170,9 +170,6 @@ rf_metrics_final <- rf_res_final |>
 rf_mean_rmse  <- mean(rf_metrics_final$.estimate)
 
 
-#capturing best parameters
-best
-
 ```
 
 #Ridge Model
@@ -252,20 +249,9 @@ knn_mean_rmse <- mean(knn_metrics_final$.estimate)
 rf_mean_rmse  <- mean(rf_metrics_final$.estimate)
 ridge_mean_rmse <- mean(ridge_rmse$mean)
 dt_mean_rmse <- mean(dt_metrics$.estimate)
-lass_mean_rmse <- mean(lasso_metrics$mean)
+lasso_best_rmse <- min(lasso_metrics$mean)
 ```
 
-#RMSE Visualizations
-```{r}
-#either fill this out with all models or delete
-#just nice to show him we can do visuals too lol
-
-ggplot(lm_metrics, aes(x = id, y = .estimate)) +
-  geom_point() +
-  labs(title = "RMSE across folds – Linear regression",
-       x = "Fold", y = "RMSE") +
-  theme_minimal()
-```
 
 #Out of Sample RMSE
 ```{r}
@@ -285,8 +271,8 @@ test_rmse <- data_test |>
 test_rmse[[3]]
 
 ```
-Out of Sample RMSE = 7.9286
-Not too shabby
+# Out of Sample RMSE = 7.9286
+# Not too shabby
 
 #Final Predictions
 ```{r}
@@ -298,6 +284,6 @@ results <- data |>
   slice(1380:1409) |>
   select(date, ridership)
 
-results$predictions <- predictions 
+results$predictions <- predictions$.pred
 
 ```
